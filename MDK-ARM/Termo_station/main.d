@@ -39,6 +39,20 @@ termo_station\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h
 termo_station\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 termo_station\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 termo_station\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+termo_station\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.h
+termo_station\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+termo_station\main.o: ../Core/Inc/FreeRTOSConfig.h
+termo_station\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+termo_station\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+termo_station\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+termo_station\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+termo_station\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+termo_station\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+termo_station\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
+termo_station\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h
+termo_station\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h
+termo_station\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h
+termo_station\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h
 termo_station\main.o: D:\Program Files\Keilv5\ARM\ARMCC\Bin\..\include\stdio.h
 termo_station\main.o: ../Core/Inc/st7735.h
 termo_station\main.o: ../Core/Inc/fonts.h

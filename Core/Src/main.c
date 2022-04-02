@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -45,7 +46,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1;
+ ADC_HandleTypeDef hadc1;
 
 I2C_HandleTypeDef hi2c1;
 
@@ -57,6 +58,13 @@ TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart1;
 
+osThreadId BarometerHandle;
+osThreadId PhotoresistorHandle;
+osThreadId RTCHandle;
+uint32_t RTCBuffer[ 128 ];
+osStaticThreadDef_t RTCControlBlock;
+osSemaphoreId myBinarySem01Handle;
+osStaticSemaphoreDef_t myBinarySem01ControlBlock;
 /* USER CODE BEGIN PV */
 char str1[100];
 bool config = false;
@@ -93,6 +101,10 @@ static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_RTC_Init(void);
 static void MX_TIM3_Init(void);
+void BarometerTask(void const * argument);
+void Photoresistor_function(void const * argument);
+void StartRTC(void const * argument);
+
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -152,32 +164,53 @@ int main(void)
 	}
   /* USER CODE END 2 */
 
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* Create the semaphores(s) */
+  /* definition and creation of myBinarySem01 */
+  osSemaphoreStaticDef(myBinarySem01, &myBinarySem01ControlBlock);
+  myBinarySem01Handle = osSemaphoreCreate(osSemaphore(myBinarySem01), 1);
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+  /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+
+  /* Create the thread(s) */
+  /* definition and creation of Barometer */
+  osThreadDef(Barometer, BarometerTask, osPriorityHigh, 0, 128);
+  BarometerHandle = osThreadCreate(osThread(Barometer), NULL);
+
+  /* definition and creation of Photoresistor */
+  osThreadDef(Photoresistor, Photoresistor_function, osPriorityIdle, 0, 128);
+  PhotoresistorHandle = osThreadCreate(osThread(Photoresistor), NULL);
+
+  /* definition and creation of RTC */
+  osThreadStaticDef(RTC, StartRTC, osPriorityRealtime, 0, 128, RTCBuffer, &RTCControlBlock);
+  RTCHandle = osThreadCreate(osThread(RTC), NULL);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+  /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//		tf = BME280_ReadTemperature();
-//		sprintf(str1, "Temperature:       %.3f *C", tf);
-//		ST7735_WriteString(0, 80, str1, Font_7x10, ST7735_WHITE, ST7735_BLACK);
-//		pf = BME280_ReadPressure();
-//		sprintf(str1, "Pressure: %.3f hPa; %.3f mmHg", pf/1000.0f, pf * 0.000750061683f);
-//		ST7735_WriteString(0, 100, str1, Font_7x10, ST7735_WHITE, ST7735_BLACK);
-//		af = BME280_ReadAltitude(SEALEVELPRESSURE_PA);
-//		sprintf(str1, "Altitude: %.1f m", af);
-//		ST7735_WriteString(0, 120, str1, Font_7x10, ST7735_WHITE, ST7735_BLACK);
-		PhotoR_handle();
-		get_time();
-		Show_BME_Values();
-		if (config) {
-			while (!configure_time()){
-				//In function
-			}
-			ST7735_WriteString(0, 80, "       ", Font_7x10, ST7735_WHITE, ST7735_BLACK);
-			config = false;
-		}
-		//HAL_Delay(10);
-		//ST7735_WriteString(0, 115, "$%&'\(", myFont_16x18, ST7735_WHITE, ST7735_BLACK);
-		//ST7735_WriteString(0, 135, " !\"#", myFont_16x18, ST7735_COLOR565(255, 165, 0), ST7735_BLACK);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -198,6 +231,7 @@ void SystemClock_Config(void)
   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -214,6 +248,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -246,6 +281,7 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 1 */
 
   /* USER CODE END ADC1_Init 1 */
+
   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
   */
   hadc1.Instance = ADC1;
@@ -264,6 +300,7 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
+
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
   sConfig.Channel = ADC_CHANNEL_0;
@@ -325,10 +362,10 @@ static void MX_RTC_Init(void)
 
   /* USER CODE END RTC_Init 0 */
 
-
   /* USER CODE BEGIN RTC_Init 1 */
 
   /* USER CODE END RTC_Init 1 */
+
   /** Initialize RTC Only
   */
   hrtc.Instance = RTC;
@@ -349,7 +386,6 @@ static void MX_RTC_Init(void)
 
   /** Initialize RTC and set the Time and Date
   */
-  
   /* USER CODE BEGIN RTC_Init 2 */
 
   /* USER CODE END RTC_Init 2 */
@@ -496,7 +532,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : BTN1_Pin */
   GPIO_InitStruct.Pin = BTN1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(BTN1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : TFT_DC_Pin */
@@ -516,7 +552,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : BTN2_Pin */
   GPIO_InitStruct.Pin = BTN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(BTN2_GPIO_Port, &GPIO_InitStruct);
 
 }
@@ -524,6 +560,95 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+/* USER CODE BEGIN Header_BarometerTask */
+/**
+  * @brief  Function implementing the Barometer thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_BarometerTask */
+void BarometerTask(void const * argument)
+{
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  for(;;)
+  {
+    Show_BME_Values();
+		osDelay(500);
+  }
+  /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_Photoresistor_function */
+/**
+* @brief Function implementing the Photoresistor thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_Photoresistor_function */
+void Photoresistor_function(void const * argument)
+{
+  /* USER CODE BEGIN Photoresistor_function */
+  /* Infinite loop */
+  for(;;)
+  {
+    PhotoR_handle();
+		osDelay(1000);
+  }
+  /* USER CODE END Photoresistor_function */
+}
+
+/* USER CODE BEGIN Header_StartRTC */
+/**
+* @brief Function implementing the RTC thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartRTC */
+void StartRTC(void const * argument)
+{
+  /* USER CODE BEGIN StartRTC */
+  /* Infinite loop */
+  for(;;)
+  {
+		if (myBinarySem01Handle != NULL) {
+			if (osSemaphoreWait(myBinarySem01Handle, 1600) == osOK) {
+				get_time();
+				if (config) {
+					while (!configure_time()){
+						//In function
+					}
+					ST7735_WriteString(0, 80, "       ", Font_7x10, ST7735_WHITE, ST7735_BLACK);
+					config = false;
+				}
+				osSemaphoreRelease(myBinarySem01Handle);
+			}
+		}
+  }
+  /* USER CODE END StartRTC */
+}
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM1 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM1) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
@@ -556,4 +681,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-

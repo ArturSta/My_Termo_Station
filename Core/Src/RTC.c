@@ -73,7 +73,7 @@ void get_time (void) {
 	if (gTime.Hours >= 18 && gTime.Hours <= 23) {
 		ST7735_WriteString(SIGN_X_POSS, SIGN_Y_POSS, EVENING, myFont_16x18, ST7735_ORANGE, ST7735_BLACK);
 	}
-	if (gTime.Hours >= 0 && gTime.Hours < 6) {
+	if ((gTime.Hours >= 0 && gTime.Hours < 6) || gTime.Hours == 24) {
 		ST7735_WriteString(SIGN_X_POSS, SIGN_Y_POSS, NIGHT, myFont_16x18, ST7735_WHITE, ST7735_BLACK);
 	}
 	//Display time
