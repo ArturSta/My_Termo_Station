@@ -2,8 +2,8 @@
 #include "RTC.h"
 
 //Defines
-#define MORNING " "
-#define DAY "!"
+#define MORNING "!"
+#define DAY " "
 #define EVENING "\""
 #define NIGHT "#"
 #define SIGN_X_POSS 0
@@ -64,14 +64,17 @@ void get_time (void) {
   RTC_DateTypeDef gDate;
 	HAL_RTC_GetTime(&hrtc, &gTime, RTC_FORMAT_BIN);  // Get time
 	HAL_RTC_GetDate(&hrtc, &gDate, RTC_FORMAT_BIN);  // Get date
-	if (gTime.Hours >= 7 && gTime.Hours < 12) {
+	if (gTime.Hours >= 6 && gTime.Hours < 12) {
 		ST7735_WriteString(SIGN_X_POSS, SIGN_Y_POSS, MORNING, myFont_16x18, ST7735_YELLOW, ST7735_BLACK);
-	} else if (gTime.Hours >= 12 && gTime.Hours < 18) {
+	}
+	if (gTime.Hours >= 12 && gTime.Hours < 18) {
 		ST7735_WriteString(SIGN_X_POSS, SIGN_Y_POSS, DAY, myFont_16x18, ST7735_YELLOW, ST7735_BLACK);
-	}else if (gTime.Hours >= 18 && gTime.Hours < 24) {
+	}
+	if (gTime.Hours >= 18 && gTime.Hours <= 23) {
 		ST7735_WriteString(SIGN_X_POSS, SIGN_Y_POSS, EVENING, myFont_16x18, ST7735_ORANGE, ST7735_BLACK);
-	}else if (gTime.Hours >= 0 && gTime.Hours < 7) {
-		ST7735_WriteString(SIGN_X_POSS, SIGN_Y_POSS, NIGHT, myFont_16x18, ST7735_YELLOW, ST7735_BLACK);
+	}
+	if (gTime.Hours >= 0 && gTime.Hours < 6) {
+		ST7735_WriteString(SIGN_X_POSS, SIGN_Y_POSS, NIGHT, myFont_16x18, ST7735_WHITE, ST7735_BLACK);
 	}
 	//Display time
 	sprintf(time, "%02d:%02d", gTime.Hours, gTime.Minutes);
@@ -96,7 +99,7 @@ bool configure_time (void) {
 					if (BTN_A_Read == 1) {
 						sTime.Minutes++;
 						delay_ms(1000);
-						if (sTime.Minutes > 0x59) {
+						if (sTime.Minutes == 0x60) {
 							sTime.Minutes = 0x00;
 							if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK) {
 								RTC_error();
@@ -117,7 +120,7 @@ bool configure_time (void) {
 					if (BTN_A_Read == 1) {
 						sTime.Hours++;
 						delay_ms(1000);
-						if (sTime.Hours > 0x59) {
+						if (sTime.Hours == 0x24) {
 							sTime.Hours = 0x00;
 							if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK) {
 								RTC_error();
@@ -138,7 +141,7 @@ bool configure_time (void) {
 					if (BTN_A_Read == 1) {
 						sDate.Year++;
 						delay_ms(1000);
-						if (sDate.Year > 99) {
+						if (sDate.Year == 100) {
 							sDate.Year = 0x00;
 							if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
 								RTC_error();
@@ -159,7 +162,7 @@ bool configure_time (void) {
 					if (BTN_A_Read == 1) {
 						sDate.Date++;
 						delay_ms(1000);
-						if (sDate.Date > 31) {
+						if (sDate.Date == 32) {
 							sDate.Date = 0x00;
 							if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
 								RTC_error();
@@ -180,7 +183,7 @@ bool configure_time (void) {
 					if (BTN_A_Read == 1) {
 						sDate.Month++;
 						delay_ms(1000);
-						if (sDate.Month > 12) {
+						if (sDate.Month == 13) {
 							sDate.Month = 0x01;
 							if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
 								RTC_error();
@@ -201,7 +204,7 @@ bool configure_time (void) {
 //					if (BTN_A_Read == 1) {
 //						sDate.WeekDay++;
 //						delay_ms(1000);
-//						if (sDate.WeekDay > 12) {
+//						if (sDate.WeekDay == 8) {
 //							sDate.WeekDay = 0x01;
 //							if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
 //								RTC_error();

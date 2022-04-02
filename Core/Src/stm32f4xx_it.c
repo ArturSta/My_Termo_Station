@@ -211,10 +211,11 @@ void TIM3_IRQHandler(void)
   HAL_TIM_IRQHandler(&htim3);	
 	
   /* USER CODE BEGIN TIM3_IRQn 1 */
-	if (BTN_A_Read == 1 && config == false) {
+	if (BTN_A_Read == 1) {
 		btn_pressd_t++;
-		sprintf(timer, "%d", btn_pressd_t);
-		ST7735_WriteString(0, 70, timer, Font_7x10, ST7735_WHITE, ST7735_BLACK);
+		//Debug prints
+		//sprintf(timer, "%d", btn_pressd_t);
+		//ST7735_WriteString(0, 70, timer, Font_7x10, ST7735_WHITE, ST7735_BLACK);
 		if (btn_pressd_t == 3000) {
 			config = true;
 		}

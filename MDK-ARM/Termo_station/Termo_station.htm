@@ -3,7 +3,7 @@
 <title>Static Call Graph - [Termo_station\Termo_station.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image Termo_station\Termo_station.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Sat Apr 02 22:17:43 2022
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Sat Apr 02 23:48:47 2022
 <BR><P>
 <H3>Maximum Stack Usage =        536 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -470,8 +470,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[48]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_sputc
 <LI><a href="#[67]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_printf_char_common
 </UL>
-<BR>[Called By]<UL><LI><a href="#[27]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TIM3_IRQHandler
-<LI><a href="#[114]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;get_time
+<BR>[Called By]<UL><LI><a href="#[114]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;get_time
 <LI><a href="#[ff]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Show_BME_Values
 </UL>
 
@@ -1474,8 +1473,7 @@ Global Symbols
 <LI><a href="#[fe]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ST7735_WriteChar
 <LI><a href="#[f5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ST7735_Select
 </UL>
-<BR>[Called By]<UL><LI><a href="#[27]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TIM3_IRQHandler
-<LI><a href="#[114]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;get_time
+<BR>[Called By]<UL><LI><a href="#[114]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;get_time
 <LI><a href="#[113]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;configure_time
 <LI><a href="#[ef]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PhotoR_handle
 <LI><a href="#[5e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
@@ -1522,14 +1520,11 @@ Global Symbols
 <P><STRONG><a name="[46]"></a>SystemInit</STRONG> (Thumb, 14 bytes, Stack size 0 bytes, system_stm32f4xx.o(i.SystemInit))
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f401xc.o(.text)
 </UL>
-<P><STRONG><a name="[27]"></a>TIM3_IRQHandler</STRONG> (Thumb, 112 bytes, Stack size 24 bytes, stm32f4xx_it.o(i.TIM3_IRQHandler))
-<BR><BR>[Stack]<UL><LI>Max Depth = 280 + Unknown Stack Size
-<LI>Call Chain = TIM3_IRQHandler &rArr; ST7735_WriteString &rArr; ST7735_WriteChar &rArr; ST7735_SetAddressWindow &rArr; ST7735_WriteData &rArr; HAL_SPI_Transmit &rArr; SPI_EndRxTxTransaction &rArr; SPI_WaitFlagStateUntilTimeout
+<P><STRONG><a name="[27]"></a>TIM3_IRQHandler</STRONG> (Thumb, 60 bytes, Stack size 8 bytes, stm32f4xx_it.o(i.TIM3_IRQHandler))
+<BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = TIM3_IRQHandler &rArr; HAL_TIM_IRQHandler
 </UL>
 <BR>[Calls]<UL><LI><a href="#[d8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_IRQHandler
 <LI><a href="#[102]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_ReadPin
-<LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ST7735_WriteString
-<LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2sprintf
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f401xc.o(RESET)
 </UL>
@@ -1668,7 +1663,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_pow
 </UL>
 
-<P><STRONG><a name="[114]"></a>get_time</STRONG> (Thumb, 320 bytes, Stack size 96 bytes, rtc.o(i.get_time))
+<P><STRONG><a name="[114]"></a>get_time</STRONG> (Thumb, 314 bytes, Stack size 96 bytes, rtc.o(i.get_time))
 <BR><BR>[Stack]<UL><LI>Max Depth = 352 + Unknown Stack Size
 <LI>Call Chain = get_time &rArr; ST7735_WriteString &rArr; ST7735_WriteChar &rArr; ST7735_SetAddressWindow &rArr; ST7735_WriteData &rArr; HAL_SPI_Transmit &rArr; SPI_EndRxTxTransaction &rArr; SPI_WaitFlagStateUntilTimeout
 </UL>
