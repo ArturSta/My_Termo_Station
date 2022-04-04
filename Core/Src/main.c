@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -38,6 +37,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define BTN_PRESS_TIME 3000 //function returns microseconds!
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -46,7 +46,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
- ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc1;
 
 I2C_HandleTypeDef hi2c1;
 
@@ -54,20 +54,24 @@ RTC_HandleTypeDef hrtc;
 
 SPI_HandleTypeDef hspi1;
 
+TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart1;
 
-osThreadId BarometerHandle;
-osThreadId PhotoresistorHandle;
-osThreadId RTCHandle;
-uint32_t RTCBuffer[ 128 ];
-osStaticThreadDef_t RTCControlBlock;
-osSemaphoreId myBinarySem01Handle;
-osStaticSemaphoreDef_t myBinarySem01ControlBlock;
 /* USER CODE BEGIN PV */
+//typedef enum {
+//	timer_first,
+//	timer_1 = timer_first, //Not used
+//	timer_2,
+//	timer_3,               //Not used
+//	timer_4,
+//	timer_last
+//} etimer_callback_t;
+
 char str1[100];
-bool config = false;
+volatile uint32_t timer_val = 0;
 
 #ifdef __GNUC__
 /* With GCC, small printf (option LD Linker->Libraries->Small printf
@@ -101,10 +105,8 @@ static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_RTC_Init(void);
 static void MX_TIM3_Init(void);
-void BarometerTask(void const * argument);
-void Photoresistor_function(void const * argument);
-void StartRTC(void const * argument);
-
+static void MX_TIM4_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -148,69 +150,47 @@ int main(void)
   MX_I2C1_Init();
   MX_RTC_Init();
   MX_TIM3_Init();
+  MX_TIM4_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 	ST7735_Init();
-	ST7735_FillScreen(ST7735_BLACK);
-  ST7735_WriteString(0, 0, "Font_7x10, red on black, lorem ipsum dolor sit amet", Font_7x10, ST7735_RED, ST7735_BLACK);
-  ST7735_WriteString(0, 3*10, "Font_11x18, green, lorem ipsum", Font_11x18, ST7735_GREEN, ST7735_BLACK);
-  ST7735_WriteString(0, 3*10+3*18, "Font_16x26", Font_16x26, ST7735_BLUE, ST7735_BLACK);
+	ST7735_FillScreen(ST7735_GREY);
+  ST7735_WriteString(5, 5, "MY", Font_16x26, ST7735_BLACK, ST7735_GREY);
+  ST7735_WriteString(5, 31, "HOME", Font_16x26, ST7735_BLACK, ST7735_GREY);
+  ST7735_WriteString(5, 57, "CLIMATE", Font_16x26, ST7735_BLACK, ST7735_GREY);
+	ST7735_WriteString(5, 83, "STATION", Font_16x26, ST7735_BLACK, ST7735_GREY);
   HAL_Delay(1000);		
 	ST7735_FillScreen(ST7735_BLACK);
 	Termo_Station_ini();
-	HAL_TIM_Base_Start_IT(&htim3);
+	HAL_TIM_Base_Start(&htim3);
+	HAL_TIM_Base_Start_IT(&htim2);
+	HAL_TIM_Base_Start_IT(&htim4);
 	BME280_Init();
 	if (HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1) != RTC_BCKP_RGSTR){
 		set_time();
 	}
   /* USER CODE END 2 */
 
-  /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
-
-  /* Create the semaphores(s) */
-  /* definition and creation of myBinarySem01 */
-  osSemaphoreStaticDef(myBinarySem01, &myBinarySem01ControlBlock);
-  myBinarySem01Handle = osSemaphoreCreate(osSemaphore(myBinarySem01), 1);
-
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
-
-  /* USER CODE BEGIN RTOS_TIMERS */
-  /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
-
-  /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
-
-  /* Create the thread(s) */
-  /* definition and creation of Barometer */
-  osThreadDef(Barometer, BarometerTask, osPriorityHigh, 0, 128);
-  BarometerHandle = osThreadCreate(osThread(Barometer), NULL);
-
-  /* definition and creation of Photoresistor */
-  osThreadDef(Photoresistor, Photoresistor_function, osPriorityIdle, 0, 128);
-  PhotoresistorHandle = osThreadCreate(osThread(Photoresistor), NULL);
-
-  /* definition and creation of RTC */
-  osThreadStaticDef(RTC, StartRTC, osPriorityRealtime, 0, 128, RTCBuffer, &RTCControlBlock);
-  RTCHandle = osThreadCreate(osThread(RTC), NULL);
-
-  /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
-  /* USER CODE END RTOS_THREADS */
-
-  /* Start scheduler */
-  osKernelStart();
-
-  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
+		//Barometer and Photoresistor updates via timer interrupts
+		get_time();
+		if (BTN_A_Read == 1) {
+			timer_val = __HAL_TIM_GET_COUNTER(&htim3);
+			while (BTN_A_Read == 1) {
+				if ((__HAL_TIM_GET_COUNTER(&htim3) - timer_val) == BTN_PRESS_TIME) {  //divide because of microseconds
+					while (!configure_time()){
+						//In function
+					}
+				}
+			}
+		}
+		timer_val = 0;
+//		PhotoR_handle();
+//		Show_BME_Values();
+		
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -386,6 +366,7 @@ static void MX_RTC_Init(void)
 
   /** Initialize RTC and set the Time and Date
   */
+  
   /* USER CODE BEGIN RTC_Init 2 */
 
   /* USER CODE END RTC_Init 2 */
@@ -431,6 +412,51 @@ static void MX_SPI1_Init(void)
 }
 
 /**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 1000-1;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 84000-1;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
   * @brief TIM3 Initialization Function
   * @param None
   * @retval None
@@ -449,11 +475,11 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 0;
+  htim3.Init.Prescaler = 25000-1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 65535;
+  htim3.Init.Period = 16800-1;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {
     Error_Handler();
@@ -472,6 +498,51 @@ static void MX_TIM3_Init(void)
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
+
+}
+
+/**
+  * @brief TIM4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM4_Init(void)
+{
+
+  /* USER CODE BEGIN TIM4_Init 0 */
+
+  /* USER CODE END TIM4_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM4_Init 1 */
+
+  /* USER CODE END TIM4_Init 1 */
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 1000-1;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 21000-1;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM4_Init 2 */
+
+  /* USER CODE END TIM4_Init 2 */
 
 }
 
@@ -532,7 +603,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : BTN1_Pin */
   GPIO_InitStruct.Pin = BTN1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(BTN1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : TFT_DC_Pin */
@@ -552,103 +623,25 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : BTN2_Pin */
   GPIO_InitStruct.Pin = BTN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(BTN2_GPIO_Port, &GPIO_InitStruct);
 
 }
 
 /* USER CODE BEGIN 4 */
-
-/* USER CODE END 4 */
-
-/* USER CODE BEGIN Header_BarometerTask */
-/**
-  * @brief  Function implementing the Barometer thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-/* USER CODE END Header_BarometerTask */
-void BarometerTask(void const * argument)
-{
-  /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-  for(;;)
-  {
-    Show_BME_Values();
-		osDelay(500);
-  }
-  /* USER CODE END 5 */
-}
-
-/* USER CODE BEGIN Header_Photoresistor_function */
-/**
-* @brief Function implementing the Photoresistor thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_Photoresistor_function */
-void Photoresistor_function(void const * argument)
-{
-  /* USER CODE BEGIN Photoresistor_function */
-  /* Infinite loop */
-  for(;;)
-  {
-    PhotoR_handle();
-		osDelay(1000);
-  }
-  /* USER CODE END Photoresistor_function */
-}
-
-/* USER CODE BEGIN Header_StartRTC */
-/**
-* @brief Function implementing the RTC thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartRTC */
-void StartRTC(void const * argument)
-{
-  /* USER CODE BEGIN StartRTC */
-  /* Infinite loop */
-  for(;;)
-  {
-		if (myBinarySem01Handle != NULL) {
-			if (osSemaphoreWait(myBinarySem01Handle, 1600) == osOK) {
-				get_time();
-				if (config) {
-					while (!configure_time()){
-						//In function
-					}
-					ST7735_WriteString(0, 80, "       ", Font_7x10, ST7735_WHITE, ST7735_BLACK);
-					config = false;
-				}
-				osSemaphoreRelease(myBinarySem01Handle);
-			}
-		}
-  }
-  /* USER CODE END StartRTC */
-}
-
-/**
-  * @brief  Period elapsed callback in non blocking mode
-  * @note   This function is called  when TIM1 interrupt took place, inside
-  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
-  * a global variable "uwTick" used as application time base.
-  * @param  htim : TIM handle
-  * @retval None
-  */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  /* USER CODE BEGIN Callback 0 */
-
-  /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM1) {
-    HAL_IncTick();
+	//uint8_t RetVal;
+  // Check which version of the timer triggered this callback and toggle LED
+  if (htim == &htim2) {
+    PhotoR_handle();
   }
-  /* USER CODE BEGIN Callback 1 */
-
-  /* USER CODE END Callback 1 */
+	if (htim == &htim4) {
+		Show_BME_Values();
+	}
+	//return RetVal;
 }
+/* USER CODE END 4 */
 
 /**
   * @brief  This function is executed in case of error occurrence.

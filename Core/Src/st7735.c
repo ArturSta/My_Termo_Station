@@ -1,8 +1,15 @@
 /* vim: set ai et ts=4 sw=4: */
 #include "stm32f4xx_hal.h"
 #include "st7735.h"
+#include "BME280.h"
 
 #define DELAY 0x80
+#define GITHUB_X_POSS    4
+#define GITHUB_Y_POSS    150
+#define HORIZONTAL_L1    36
+#define HORIZONTAL_L2    73
+#define HORIZONTAL_L3    130
+#define VERTICAL_L1      67
 
 // based on Adafruit ST7735 library for Arduino
 static const uint8_t
@@ -276,15 +283,21 @@ void ST7735_InvertColors(bool invert) {
 
 void Termo_Station_ini (void) {
 	for (int i = 0; i < 128; i++) {
-		ST7735_DrawPixel(i, 36, ST7735_WHITE);
+		ST7735_DrawPixel(i, HORIZONTAL_L1, ST7735_WHITE);
 	}
 	for (int i = 0; i < 128; i++) {
-		ST7735_DrawPixel(i, 73, ST7735_WHITE);
+		ST7735_DrawPixel(i, HORIZONTAL_L2, ST7735_WHITE);
 	}
 	for (int i = 36; i < 73; i++) {
-		ST7735_DrawPixel(67, i, ST7735_WHITE);
+		ST7735_DrawPixel(VERTICAL_L1, i, ST7735_WHITE);
 	}
 	for (int i = 0; i < 128; i++) {
-		ST7735_DrawPixel(i, 129, ST7735_WHITE);
+		ST7735_DrawPixel(i, HORIZONTAL_L3, ST7735_WHITE);
 	}
+	ST7735_WriteString(TEMP_X_POSS, TEMP_Y_POSS, "TEMP:", Font_11x18, ST7735_WHITE, ST7735_BLACK);
+	ST7735_WriteString(ALT_X_POSS, ALT_Y_POSS, "ALT:", Font_11x18, ST7735_WHITE, ST7735_BLACK);
+	ST7735_WriteString(ALT_UNIT_X_POSS, ALT_UNIT_Y_POSS, "m", Font_11x18, ST7735_WHITE, ST7735_BLACK);
+	ST7735_WriteString(PRES_X_POSS, PRES_Y_POSS, "Presure:", Font_11x18, ST7735_WHITE, ST7735_BLACK);
+	ST7735_WriteString(HUM_X_POSS, HUM_Y_POSS, "HUM: ", Font_11x18, ST7735_WHITE, ST7735_BLACK);
+	ST7735_WriteString(GITHUB_X_POSS, GITHUB_Y_POSS, "Github - ArturSta", Font_7x10, ST7735_GREY, ST7735_BLACK);
 }

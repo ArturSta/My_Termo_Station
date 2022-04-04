@@ -232,6 +232,7 @@ extern SPI_HandleTypeDef hspi1;
 #define ST7735_YELLOW  0xFFE0
 #define ST7735_WHITE   0xFFFF
 #define ST7735_ORANGE  ST7735_COLOR565(255, 165, 0)
+#define ST7735_GREY    ST7735_COLOR565(105, 105, 105)
 #define ST7735_COLOR565(r, g, b) (((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3))
 
 // call before initializing any SPI devices

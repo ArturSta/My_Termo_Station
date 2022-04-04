@@ -8,30 +8,14 @@ extern I2C_HandleTypeDef hi2c1;
 //extern UART_HandleTypeDef huart2;
 
 //Defines
-#define TEMP_X_POSS      0
-#define TEMP_Y_POSS      37
-#define TEMP_VAL_X_POSS  0
-#define TEMP_VAL_Y_POSS  55
-#define PRES_X_POSS      0
-#define PRES_Y_POSS      75
-#define PRES1_VAL_X_POSS 0
-#define PRES1_VAL_Y_POSS 93
-#define PRES2_VAL_X_POSS 0
-#define PRES2_VAL_Y_POSS 111
-#define HUM_X_POSS       20
-#define HUM_Y_POSS       135
-#define HUM_VAL_X_POSS   76
-#define HUM_VAL_Y_POSS   135
-#define ALT_X_POSS       68
-#define ALT_Y_POSS       37
-#define ALT_VAL_X_POSS   68
-#define ALT_VAL_Y_POSS   55
+
 
 //Variables
 extern char str1[100];
 BME280_CalibData_t CalibData;
 int64_t temper_int;
-float tf = 0.0f, pf = 0.0f, af = 0.0f, hf = 0.0f;
+float tf = 0.0f, pf = 0.0f, hf = 0.0f;// af = 0.0f;
+uint32_t af = 0;
 
 //Functions
 void Error (void) {
@@ -286,18 +270,18 @@ void BME280_Init (void) {
 
 void Show_BME_Values (void) {
 	tf = BME280_ReadTemperature();
-	ST7735_WriteString(TEMP_X_POSS, TEMP_Y_POSS, "TEMP:", Font_11x18, ST7735_WHITE, ST7735_BLACK);
 	sprintf(str1, "%.1f*C", tf);
 	ST7735_WriteString(TEMP_VAL_X_POSS, TEMP_VAL_Y_POSS, str1, Font_11x18, ST7735_WHITE, ST7735_BLACK);
 	pf = BME280_ReadPressure();
-	ST7735_WriteString(PRES_X_POSS, PRES_Y_POSS, "Presure:", Font_11x18, ST7735_WHITE, ST7735_BLACK);
 	sprintf(str1, "%.2f hPa", pf/1000.0f);
 	ST7735_WriteString(PRES1_VAL_X_POSS, PRES1_VAL_Y_POSS, str1, Font_11x18, ST7735_WHITE, ST7735_BLACK);
 	sprintf(str1, "%.2f mmHg", pf * 0.000750061683f);
 	ST7735_WriteString(PRES2_VAL_X_POSS, PRES2_VAL_Y_POSS, str1, Font_11x18, ST7735_WHITE, ST7735_BLACK);
-	af = BME280_ReadAltitude(SEALEVELPRESSURE_PA);
-	ST7735_WriteString(ALT_X_POSS, ALT_Y_POSS, "ALT:", Font_11x18, ST7735_WHITE, ST7735_BLACK);
-	sprintf(str1, "%.0f m", af);
-	ST7735_WriteString(ALT_VAL_X_POSS, ALT_VAL_Y_POSS, str1, Font_11x18, ST7735_WHITE, ST7735_BLACK);
-	ST7735_WriteString(HUM_X_POSS, HUM_Y_POSS, "HUM: ", Font_11x18, ST7735_WHITE, ST7735_BLACK);	
+	af = BME280_ReadAltitude(SEALEVELPRESSURE_PA)/100;
+	sprintf(str1, "%d", af);
+	if (af < 1000) {
+		ST7735_WriteString(ALT_VAL_X_POSS, ALT_VAL_Y_POSS, str1, Font_11x18, ST7735_WHITE, ST7735_BLACK);
+	} else {
+		ST7735_WriteString(ALT_VAL_X_POSS, ALT_VAL_Y_POSS, str1, Font_7x10, ST7735_WHITE, ST7735_BLACK);
+	}
 }

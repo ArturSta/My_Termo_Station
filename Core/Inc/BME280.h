@@ -8,6 +8,27 @@
 #include "stdio.h"
 
 //Defines
+#define TEMP_X_POSS      0
+#define TEMP_Y_POSS      37
+#define PRES_X_POSS      0
+#define PRES_Y_POSS      74
+#define HUM_X_POSS       20
+#define HUM_Y_POSS       131
+#define ALT_X_POSS       68
+#define ALT_Y_POSS       37
+#define ALT_UNIT_X_POSS  112
+#define ALT_UNIT_Y_POSS  55
+#define TEMP_VAL_X_POSS  0
+#define TEMP_VAL_Y_POSS  55
+#define PRES1_VAL_X_POSS 0
+#define PRES1_VAL_Y_POSS 93
+#define PRES2_VAL_X_POSS 0
+#define PRES2_VAL_Y_POSS 111
+#define HUM_VAL_X_POSS   76
+#define HUM_VAL_Y_POSS   135
+#define ALT_VAL_X_POSS   68
+#define ALT_VAL_Y_POSS   55
+
 #define be16toword(a)               ((((a)>>8)&0xff)|(((a)<<8)&0xff00))
 #define be24toword(a)               ((((a)>>16)&0x000000ff)|((a)&0x0000ff00)|(((a)<<16)&0x00ff0000))
 

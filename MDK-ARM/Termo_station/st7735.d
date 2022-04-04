@@ -41,3 +41,7 @@ termo_station\st7735.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 termo_station\st7735.o: ../Core/Inc/st7735.h
 termo_station\st7735.o: ../Core/Inc/fonts.h
 termo_station\st7735.o: D:\Program Files\Keilv5\ARM\ARMCC\Bin\..\include\stdbool.h
+termo_station\st7735.o: ../Core/Inc/BME280.h
+termo_station\st7735.o: D:\Program Files\Keilv5\ARM\ARMCC\Bin\..\include\string.h
+termo_station\st7735.o: D:\Program Files\Keilv5\ARM\ARMCC\Bin\..\include\math.h
+termo_station\st7735.o: D:\Program Files\Keilv5\ARM\ARMCC\Bin\..\include\stdio.h

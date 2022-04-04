@@ -46,3 +46,6 @@ termo_station\stm32f4xx_it.o: ../Core/Inc/fonts.h
 termo_station\stm32f4xx_it.o: D:\Program Files\Keilv5\ARM\ARMCC\Bin\..\include\stdbool.h
 termo_station\stm32f4xx_it.o: D:\Program Files\Keilv5\ARM\ARMCC\Bin\..\include\string.h
 termo_station\stm32f4xx_it.o: D:\Program Files\Keilv5\ARM\ARMCC\Bin\..\include\stdio.h
+termo_station\stm32f4xx_it.o: ../Core/Inc/PhotoR.h
+termo_station\stm32f4xx_it.o: ../Core/Inc/BME280.h
+termo_station\stm32f4xx_it.o: D:\Program Files\Keilv5\ARM\ARMCC\Bin\..\include\math.h
