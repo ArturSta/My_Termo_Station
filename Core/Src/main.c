@@ -177,19 +177,15 @@ int main(void)
   {
 		//Barometer and Photoresistor updates via timer interrupts
 		get_time();
-		if (BTN_A_Read == 1) {
-			timer_val = __HAL_TIM_GET_COUNTER(&htim3);
-			while (BTN_A_Read == 1) {
-				if ((__HAL_TIM_GET_COUNTER(&htim3) - timer_val) == BTN_PRESS_TIME) {  //divide because of microseconds
-					while (!configure_time()){
-						//In function
-					}
+		timer_val = __HAL_TIM_GET_COUNTER(&htim3);
+		while (BTN_A_Read == 1) {
+			if ((__HAL_TIM_GET_COUNTER(&htim3) - timer_val) == BTN_PRESS_TIME) {  //divide because of microseconds
+				while (!configure_time()){
+					//In function
 				}
 			}
 		}
 		timer_val = 0;
-//		PhotoR_handle();
-//		Show_BME_Values();
 		
     /* USER CODE END WHILE */
 
