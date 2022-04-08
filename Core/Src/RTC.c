@@ -97,7 +97,7 @@ bool configure_time (void) {
 					if (BTN_A_Read == 1) {
 						sTime.Minutes++;
 						//HAL_Delay(200); //Delay needed to protect early switch
-						if (sTime.Minutes == 0x60) {
+						if (RTC_Bcd2ToByte(sTime.Minutes) == 60) {
 							sTime.Minutes = 0x00;
 							if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK) {
 								RTC_error();
@@ -117,7 +117,7 @@ bool configure_time (void) {
 					ST7735_WriteString(CFG_X_POSS, CFG_Y_POSS, "cfgH", Font_7x10, ST7735_WHITE, ST7735_BLACK);
 					if (BTN_A_Read == 1) {
 						sTime.Hours++;
-						if (sTime.Hours == 0x24) {
+						if (RTC_Bcd2ToByte(sTime.Hours) == 24) {
 							sTime.Hours = 0x00;
 							if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK) {
 								RTC_error();
@@ -137,7 +137,7 @@ bool configure_time (void) {
 					ST7735_WriteString(CFG_X_POSS, CFG_Y_POSS, "cfgY", Font_7x10, ST7735_WHITE, ST7735_BLACK);
 					if (BTN_A_Read == 1) {
 						sDate.Year++;
-						if (sDate.Year == 100) {
+						if (RTC_Bcd2ToByte(sDate.Year) == 100) {
 							sDate.Year = 0x00;
 							if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
 								RTC_error();
@@ -157,7 +157,7 @@ bool configure_time (void) {
 					ST7735_WriteString(CFG_X_POSS, CFG_Y_POSS, "cfgD", Font_7x10, ST7735_WHITE, ST7735_BLACK);
 					if (BTN_A_Read == 1) {
 						sDate.Date++;
-						if (sDate.Date == 32) {
+						if (RTC_Bcd2ToByte(sDate.Date) == 32) {
 							sDate.Date = 0x00;
 							if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
 								RTC_error();
@@ -177,7 +177,7 @@ bool configure_time (void) {
 					ST7735_WriteString(CFG_X_POSS, CFG_Y_POSS, "cfgM", Font_7x10, ST7735_WHITE, ST7735_BLACK);
 					if (BTN_A_Read == 1) {
 						sDate.Month++;
-						if (sDate.Month == 13) {
+						if (RTC_Bcd2ToByte(sDate.Month) == 13) {
 							sDate.Month = 0x01;
 							if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
 								RTC_error();
@@ -197,7 +197,7 @@ bool configure_time (void) {
 //					ST7735_WriteString(CFG_X_POSS, CFG_Y_POSS, "cfgW", Font_7x10, ST7735_WHITE, ST7735_BLACK);
 //					if (BTN_A_Read == 1) {
 //						sDate.WeekDay++;
-//						if (sDate.WeekDay == 8) {
+//						if (RTC_Bcd2ToByte(sDate.WeekDay) == 8) {
 //							sDate.WeekDay = 0x01;
 //							if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
 //								RTC_error();
