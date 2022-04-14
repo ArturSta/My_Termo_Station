@@ -12,7 +12,7 @@
 #define TEMP_Y_POSS      37
 #define PRES_X_POSS      0
 #define PRES_Y_POSS      74
-#define HUM_X_POSS       20
+#define HUM_X_POSS       10
 #define HUM_Y_POSS       131
 #define ALT_X_POSS       68
 #define ALT_Y_POSS       37
@@ -24,8 +24,8 @@
 #define PRES1_VAL_Y_POSS 93
 #define PRES2_VAL_X_POSS 0
 #define PRES2_VAL_Y_POSS 111
-#define HUM_VAL_X_POSS   76
-#define HUM_VAL_Y_POSS   135
+#define HUM_VAL_X_POSS   60
+#define HUM_VAL_Y_POSS   131
 #define ALT_VAL_X_POSS   68
 #define ALT_VAL_Y_POSS   55
 
@@ -58,12 +58,12 @@
 #define BME280_REGISTER_DIG_P7      0x9A
 #define BME280_REGISTER_DIG_P8      0x9C
 #define BME280_REGISTER_DIG_P9      0x9E
-//#define BME280_REGISTER_DIG_H1      0xA1
-//#define BME280_REGISTER_DIG_H2      0xE1
-//#define BME280_REGISTER_DIG_H3      0xE3
-//#define BME280_REGISTER_DIG_H4      0xE4
-//#define BME280_REGISTER_DIG_H5      0xE5
-//#define BME280_REGISTER_DIG_H6      0xE7
+#define BME280_REGISTER_DIG_H1      0xA1
+#define BME280_REGISTER_DIG_H2      0xE1
+#define BME280_REGISTER_DIG_H3      0xE3
+#define BME280_REGISTER_DIG_H4      0xE4
+#define BME280_REGISTER_DIG_H5      0xE5
+#define BME280_REGISTER_DIG_H6      0xE7
 #define BME280_REG_CONFIG           0xF5 // Configuration register
 #define BME280_STBY_MSK             0xE0
 #define BME280_STBY_0_5             0x00

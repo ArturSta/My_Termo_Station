@@ -13,7 +13,7 @@ extern I2C_HandleTypeDef hi2c1;
 //Variables
 extern char str1[100];
 BME280_CalibData_t CalibData;
-int64_t temper_int;
+int32_t temper_int;
 float tf = 0.0f, pf = 0.0f, hf = 0.0f;// af = 0.0f;
 uint32_t af = 0;
 
@@ -66,6 +66,11 @@ void BME280_ReadReg_S16 (uint8_t Reg, int16_t *Value) {
   I2Cx_ReadData16(BME280_ADDRESS,Reg, (uint16_t*) Value);
 }
 
+void BME280_ReadReg_BE_S16 (uint8_t Reg, int16_t *Value) {
+  I2Cx_ReadData16(BME280_ADDRESS,Reg,(uint16_t*)Value);
+  *(uint16_t *) Value = be16toword(*(uint16_t *) Value);
+}
+
 void BME280_ReadReg_U24 (uint8_t Reg, uint32_t *Value) {
   I2Cx_ReadData24(BME280_ADDRESS,Reg,Value);
   *(uint32_t *) Value &= 0x00FFFFFF;
@@ -114,17 +119,17 @@ void BME280_ReadCoefficients (void) {
   BME280_ReadReg_S16(BME280_REGISTER_DIG_P9,&CalibData.dig_P9);
 //  sprintf(str1, "DIG_P9: %drn", CalibData.dig_P9);
 //	ST7735_WriteString(0, 150, str1, Font_7x10, ST7735_WHITE, ST7735_BLACK);
-//  CalibData.dig_H1 = BME280_ReadReg(BME280_REGISTER_DIG_H1);
+  CalibData.dig_H1 = BME280_ReadReg(BME280_REGISTER_DIG_H1);
 //  sprintf(str1, "DIG_H1: %drn", CalibData.dig_H1);
-//  BME280_ReadReg_S16(BME280_REGISTER_DIG_H2,&CalibData.dig_H2);
+  BME280_ReadReg_S16(BME280_REGISTER_DIG_H2,&CalibData.dig_H2);
 //  sprintf(str1, "DIG_H2: %drn", CalibData.dig_H2);
-//  CalibData.dig_H3 = BME280_ReadReg(BME280_REGISTER_DIG_H3);
+  CalibData.dig_H3 = BME280_ReadReg(BME280_REGISTER_DIG_H3);
 //  sprintf(str1, "DIG_H3: %drn", CalibData.dig_H3);
-//  CalibData.dig_H4 = (BME280_ReadReg(BME280_REGISTER_DIG_H4) << 4) | (BME280_ReadReg(BME280_REGISTER_DIG_H4+1) & 0xF);
+  CalibData.dig_H4 = (BME280_ReadReg(BME280_REGISTER_DIG_H4) << 4) | (BME280_ReadReg(BME280_REGISTER_DIG_H4+1) & 0xF);
 //  sprintf(str1, "DIG_H4: %drn", CalibData.dig_H4);;
-//  CalibData.dig_H5 = (BME280_ReadReg(BME280_REGISTER_DIG_H5+1) << 4) | (BME280_ReadReg(BME280_REGISTER_DIG_H5) >> 4);
+  CalibData.dig_H5 = (BME280_ReadReg(BME280_REGISTER_DIG_H5+1) << 4) | (BME280_ReadReg(BME280_REGISTER_DIG_H5) >> 4);
 //  sprintf(str1, "DIG_H5: %drn", CalibData.dig_H5);
-//  CalibData.dig_H6 = (int8_t)BME280_ReadReg(BME280_REGISTER_DIG_H6);
+  CalibData.dig_H6 = (int8_t)BME280_ReadReg(BME280_REGISTER_DIG_H6);
 //  sprintf(str1, "DIG_H6: %drn", CalibData.dig_H3);
 }
 
@@ -183,15 +188,15 @@ uint8_t BME280_ReadStatus (void) {
 float BME280_ReadTemperature (void) {
   float temper_float = 0.0f;
 	uint32_t temper_raw;
-	int64_t val1, val2;
+	int32_t val1, val2;
 	BME280_ReadReg_BE_U24(BME280_REGISTER_TEMPDATA,&temper_raw);
 	temper_raw >>= 4;
 	//Debug prints
 //	sprintf(str1, "Temperature RAW:  0x%08X", temper_raw);
 //	ST7735_WriteString(0, 60, str1, Font_7x10, ST7735_WHITE, ST7735_BLACK);
-	val1 = ((((temper_raw>>3) - ((int64_t)CalibData.dig_T1 <<1))) * ((int64_t)CalibData.dig_T2)) >> 11;
-	val2 = (((((temper_raw>>4) - ((int64_t)CalibData.dig_T1)) * ((temper_raw>>4) - ((int64_t)CalibData.dig_T1))) >> 12)
-				 * ((int64_t)CalibData.dig_T3)) >> 14;
+	val1 = ((((temper_raw>>3) - ((int32_t)CalibData.dig_T1 <<1))) * ((int32_t)CalibData.dig_T2)) >> 11;
+	val2 = (((((temper_raw>>4) - ((int32_t)CalibData.dig_T1)) * ((temper_raw>>4) - ((int32_t)CalibData.dig_T1))) >> 12)
+				 * ((int32_t)CalibData.dig_T3)) >> 14;
 	temper_int = val1 + val2;
 	temper_float = ((temper_int * 5 + 128) >> 8);
 	temper_float /= 100.0f;
@@ -228,6 +233,27 @@ float BME280_ReadPressure (void) {
 
 float BME280_ReadHumidity (void) {
   float hum_float = 0.0f;
+	int16_t hum_raw;
+	int32_t hum_raw_sign, v_x1_u32r;
+	BME280_ReadTemperature(); // must be done first to get t_fine
+	BME280_ReadReg_BE_S16(BME280_REGISTER_HUMIDDATA,&hum_raw);
+	hum_raw_sign = ((int32_t)hum_raw)&0x0000FFFF;
+	//sprintf(str1, "Humidity RAW: 0x%08X\r\n",hum_raw_sign);
+	//Debug print below
+//	sprintf(str1, "Humidity RAW: 0x%08X\r\n", hum_raw);
+//	ST7735_WriteString(0, 60, str1, Font_7x10, ST7735_WHITE, ST7735_BLACK);
+	v_x1_u32r = (temper_int - ((int32_t)76800));
+	v_x1_u32r = (((((hum_raw_sign << 14) - (((int32_t)CalibData.dig_H4) << 20) -
+								(((int32_t)CalibData.dig_H5) * v_x1_u32r)) + ((int32_t)16384)) >> 15) *
+								(((((((v_x1_u32r * ((int32_t)CalibData.dig_H6)) >> 10) *
+								(((v_x1_u32r * ((int32_t)CalibData.dig_H3)) >> 11) + ((int32_t)32768))) >> 10) +
+								((int32_t)2097152)) * ((int32_t)CalibData.dig_H2) + 8192) >> 14));
+	v_x1_u32r = (v_x1_u32r - (((((v_x1_u32r >> 15) * (v_x1_u32r >> 15)) >> 7) *
+								((int32_t)CalibData.dig_H1)) >> 4));
+	v_x1_u32r = (v_x1_u32r < 0) ? 0 : v_x1_u32r;
+	v_x1_u32r = (v_x1_u32r > 419430400) ? 419430400 : v_x1_u32r;
+	hum_float = (v_x1_u32r>>12);
+	hum_float /= 1024.0f;
   return hum_float;
 }
 
@@ -240,12 +266,13 @@ float BME280_ReadAltitude (float seaLevel) {
 
 void BME280_Init (void) {
   uint8_t    value = 0;
+	HAL_Delay(25);
   //uint32_t   value32 = 0; Debug value
 	value = BME280_ReadReg(BME280_REG_ID);
 	//ST7735_WriteString(0, 50, "Debug val:", Font_7x10, ST7735_WHITE, ST7735_BLACK);
 	//sprintf(str1, "%02X", value);
 	//ST7735_WriteString(0, 65, str1, Font_7x10, ST7735_WHITE, ST7735_BLACK);
-	if (value != BMP280_ID) {
+	if (value != BME280_ID) {
 		Error();
 		return;
 	}
@@ -256,6 +283,7 @@ void BME280_Init (void) {
 	BME280_SetFilter(BME280_FILTER_4);  //Change filter coefficient here if needed
 	BME280_SetOversamplingTemper(BME280_OSRS_T_x4);
 	BME280_SetOversamplingPressure(BME280_OSRS_P_x2);
+	BME280_SetOversamplingHum(BME280_OSRS_H_x1);
 	//Debug prints
 //	value32 = BME280_ReadReg(BME280_REG_CTRL_MEAS);
 //	sprintf(str1, "Measurements status: %04X", value32);
@@ -284,4 +312,7 @@ void Show_BME_Values (void) {
 	} else {
 		ST7735_WriteString(ALT_VAL_X_POSS, ALT_VAL_Y_POSS, str1, Font_7x10, ST7735_WHITE, ST7735_BLACK);
 	}
+	hf = BME280_ReadHumidity();
+	sprintf(str1, "%.1f%%", hf);
+	ST7735_WriteString(HUM_VAL_X_POSS, HUM_VAL_Y_POSS, str1, Font_11x18, ST7735_WHITE, ST7735_BLACK);
 }

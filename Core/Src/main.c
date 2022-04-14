@@ -153,7 +153,9 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+	HAL_Delay(200);
 	ST7735_Init();
+	HAL_Delay(200);
 	ST7735_FillScreen(ST7735_GREY);
   ST7735_WriteString(5, 5, "MY", Font_16x26, ST7735_BLACK, ST7735_GREY);
   ST7735_WriteString(5, 31, "HOME", Font_16x26, ST7735_BLACK, ST7735_GREY);
